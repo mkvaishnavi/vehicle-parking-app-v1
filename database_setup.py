@@ -7,7 +7,9 @@ cursor.execute("""CREATE TABLE User(
         User_ID INTEGER PRIMARY KEY,
         Username TEXT,
         Email TEXT,
-        Password TEXT
+        Password TEXT,
+        Full_Name TEXT,
+        Role TEXT
     );
 """)
 cursor.execute("""CREATE TABLE Parking_Lots(
