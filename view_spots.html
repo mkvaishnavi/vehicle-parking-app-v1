@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Parking Spots</title>
+</head>
+<body>
+    <h1>Parking Spot Details</h1>
+
+    {% if spots is not none %}
+        {% if spots %}
+            {% for spot in spots %}
+                <p><strong>Spot_ID:</strong>{{ spot[0] }}</p>
+                <p><strong>Status:</strong>{{ "Available" if spot[2] == "A" else "Occupied" }}</p>
+            {% endfor %}
+        {% else %}
+            <p>No spot found with ID: {{ spot_id }}</p>
+        {% endif %}
+    {% else %}
+        <p>No spot selected.</p>
+    {% endif %}
+
+    <button><a href="/Delete_Spot">Delete</a></button><br>
+    <button><a href="/admin_dashboard">Close</a></button>
+</body>
+</html>
