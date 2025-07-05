@@ -4,12 +4,14 @@ cursor=connection.cursor()
 cursor.execute("PRAGMA foreign_keys = ON;")
 
 cursor.execute("""CREATE TABLE User(
-        User_ID INTEGER PRIMARY KEY,
-        Username TEXT,
-        Email TEXT,
-        Password TEXT,
-        Full_Name TEXT,
-        Role TEXT
+        user_ID INTEGER PRIMARY KEY,
+        username TEXT,
+        email VARCHAR,
+        password VARCHAR,
+        full_name TEXT,
+        address TEXT,
+        pincode INTEGER,
+        role TEXT
     );
 """)
 cursor.execute("""CREATE TABLE Parking_Lots(
@@ -39,6 +41,6 @@ cursor.execute("""CREATE TABLE Reservations(
         FOREIGN KEY (User_ID) REFERENCES User(User_ID)
     );
 """)
-
+cursor.execute("""INSERT INTO User(username,email,password,full_name,address,pincode,role) VALUES(?,?,?,?,?,?,?)""", ("admin","admin@gmail.com","admin123","admin_krishna","proddatur","987654","admin"))
 connection.commit()
 connection.close()
