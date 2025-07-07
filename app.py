@@ -1,4 +1,5 @@
 from flask import Flask , render_template , request , redirect , session
+from datetime import datetime 
 import sqlite3
 
 app=Flask(__name__)
@@ -36,6 +37,7 @@ def login():
         connection.close()
         if user:
             role=user[7]
+            session["user_id"]=user[0]
             session["username"]=user[1]
             session["role"]=user[7]
             if role == "admin":
@@ -49,7 +51,17 @@ def login():
 def user_dashboard():
     if "username" not in session or session["role"]!="user":
         return redirect("/Login")
-    return render_template("user_dashboard.html",username=session["username"])
+    user_id=session["user_id"]
+    username=session["username"]
+    connection=sqlite3.connect("database.db")
+    cursor=connection.cursor()
+    cursor.execute("SELECT DISTINCT pl.* FROM Parking_Lots pl JOIN Parking_spots ps ON pl.Lot_ID=ps.Lot_ID WHERE ps.status='A'")
+    available_lots=cursor.fetchall()
+    cursor.execute("""SELECT r.Reservation_ID, r.Spot_ID, r.Vehicle_number, r.Parking_time, ps.Lot_ID, pl.Price FROM Reservations r JOIN Parking_spots ps ON r.Spot_ID = ps.Spot_ID JOIN Parking_Lots pl ON ps.Lot_ID = pl.Lot_ID WHERE r.User_ID = ? AND r.Leaving_time IS NULL ORDER BY r.Reservation_ID DESC LIMIT 1""", (user_id,))
+    active_reservation = cursor.fetchone()
+    connection.close()
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return render_template("user_dashboard.html",username=username,lots=available_lots,current_time=current_time,reservation=active_reservation)
 
 @app.route("/admin_dashboard")
 def admin_dashboard():
@@ -102,7 +114,7 @@ def view_lot():
     connection.close()
     return render_template("view_lot.html", lot=lot,spots=spots)
 
-@app.route("/View_Spot/",methods=["GET","POST"])
+@app.route("/View_Spot/<int:spot_id>",methods=["GET","POST"])
 def view_spots(spot_id):
     if request.method == "GET":
         return render_template("view_spots.html", spots=None)
@@ -164,6 +176,61 @@ def view_users():
     users = cursor.fetchall()
     connection.close()
     return render_template("view_users.html", users=users)
+
+@app.route("/Reserve_spot/<int:lot_id>", methods=["POST"])
+def reserve_spot(lot_id):
+    if "user_id" not in session:
+        return redirect("/Login")
+    user_id=session["user_id"]
+    vehicle_number=request.form["vehicle_number"]
+    lot_id=request.form["lot_id"]
+    connection=sqlite3.connect("database.db")
+    cursor=connection.cursor()
+    cursor.execute("""SELECT Spot_ID FROM Parking_spots WHERE Lot_ID=? AND status='A' ORDER BY Spot_ID ASC LIMIT 1""",(lot_id,))
+    result=cursor.fetchone()
+    if not result:
+        connection.close()
+        return "<p>No available spots in this lot.</p><a href='/user_dashboard'>Go back</a>"
+    spot_id=result[0]
+    parking_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    leaving_time=None
+    parking_cost=None
+    cursor.execute("""INSERT INTO Reservations (Spot_ID,User_ID,Vehicle_number,Parking_time,Leaving_time,Parking_cost) VALUES (?, ?, ?, ?,?,?)""", (spot_id,user_id,vehicle_number,parking_time,leaving_time,parking_cost))
+    cursor.execute("""UPDATE Parking_spots SET status='O' WHERE Spot_ID=?""", (spot_id,))
+    connection.commit()
+    connection.close()
+    return redirect("/user_dashboard")
+
+@app.route("/Release_spot/<int:Spot_ID>", methods=["POST"])
+def release_spot(Spot_ID):
+    if "user_id" not in session:
+        return redirect("/Login")
+    user_id=session["user_id"]
+    connection=sqlite3.connect("database.db")
+    cursor=connection.cursor()
+    cursor.execute("""SELECT Reservation_ID , Parking_time FROM Reservations WHERE Spot_ID=? AND User_ID=? AND Leaving_time IS NULL""", (Spot_ID,user_id))
+    row = cursor.fetchone()
+    if row:
+        reservation_id , parking_time = row[0], row[1]
+        leaving_time = datetime.now()
+        parking_time = datetime.strptime(parking_time, "%Y-%m-%d %H:%M:%S")
+        cursor.execute("""UPDATE Reservations SET Leaving_time = ? WHERE Reservation_ID = ?""", (leaving_time.strftime("%Y-%m-%d %H:%M:%S"), reservation_id))
+        cursor.execute("""UPDATE Parking_spots SET status = 'A' WHERE Spot_ID = ?""", (Spot_ID,))
+    connection.commit()
+    connection.close()
+    return redirect("/user_dashboard")
+
+@app.route("/user_history")
+def user_history():
+    if "user_id" not in session:
+        return redirect("/Login")
+    user_id = session["user_id"]
+    connection = sqlite3.connect("database.db")
+    cursor = connection.cursor()
+    cursor.execute("""SELECT r.Reservation_ID, r.Spot_ID, r.Vehicle_number, r.Parking_time, r.Leaving_time, r.Parking_cost FROM Reservations r JOIN Parking_spots ps ON r.Spot_ID = ps.Spot_ID JOIN Parking_Lots pl ON ps.Lot_ID = pl.Lot_ID WHERE r.User_ID = ? ORDER BY r.Reservation_ID DESC""", (user_id,))
+    history = cursor.fetchall()
+    connection.close()
+    return render_template("user_history.html", history=history)
 
 if __name__=="__main__":
     app.debug=True

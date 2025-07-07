@@ -34,6 +34,7 @@ cursor.execute("""CREATE TABLE Reservations(
         Reservation_ID INTEGER PRIMARY KEY,
         Spot_ID INTEGER,
         User_ID INTEGER,
+        Vehicle_number TEXT,
         Parking_time TEXT,
         Leaving_time TEXT,
         Parking_cost INTEGER,
