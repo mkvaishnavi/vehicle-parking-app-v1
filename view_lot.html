@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Parking Lot Details</title>
+  </head>
+  <body>
+    <h1>Parking Lot Details</h1>
+    {% if lot %}
+      <div style="border: 1px solid #000000; padding: 10px; margin: 10px;">
+        <p><strong>Location:</strong> {{ lot[1] }}</p>
+        <p><strong>Price:</strong> {{ lot[2] }}</p>
+        <p><strong>Address:</strong> {{ lot[3] }}</p>
+        <p><strong>Pincode:</strong> {{ lot[4] }}</p>
+        <p><strong>No. of Spots:</strong> {{ lot[5] }}</p>
+      </div>
+    {% else %}
+      <p>No lot found!</p>
+    {% endif %}
+    <h2>Parking Spots</h2>
+    {% if spots %}
+      {% for spot in spots %}
+      <form method="post" action="/View_Spot/{{ spot[0] }}">
+        <input type="hidden" name="spot_id" value="{{ spot[0] }}">
+        <button class="spot-button" type="submit">
+          Spot ID: {{ spot[0] }} | Status: {{ spot[2] }}
+        </button><br><br>
+      </form>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p>No Parking Spots for this lot.</p>
+    {% endif %}
+  </body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        .lot-container {
+            width: 60%;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: #f4f4f4;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .lot-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #007BFF;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .view-button { background-color: #007BFF; }
+        .edit-button { background-color: orange; }
+        .delete-button { background-color: red; }
+        .nav-links {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .nav-links a {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 0 10px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 style="text-align: center;">Welcome Admin</h1>
+    <h2 style="text-align: center;">Parking Lots</h2>
+
+    {% for lot in lots %}
+    <div class="lot-container">
+        <div class="lot-title">{{ lot[1] }}</div>
+        <div class="button-group">
+            <form method="get" action="/View_Lot/">
+                <input type="hidden" name="lot_id" value="{{ lot[0] }}">
+                <button class="button view-button">View Lot</button>
+            </form>
+            <form method="get" action="/Edit_Lot/{{ lot[0]}}">
+                <button type="submit" class="button edit-button">Edit Lot</button>
+            </form>
+            <form method="post" action="/Delete_Lot" onsubmit="return confirm('Are you sure?');">
+                <input type="hidden" name="lot_id" value="{{ lot[0] }}">
+                <button class="button delete-button">Delete Lot</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="nav-links">
+        <a href="/Add_Lot">Add Lot</a>
+        <a href="/Logout">Logout</a>
+        <a href="/View_Users">View Users</a>
+    </div>
+
+</body>
+</html>
