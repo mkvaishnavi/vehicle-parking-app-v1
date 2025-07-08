@@ -215,11 +215,16 @@ def release_spot(Spot_ID):
         leaving_time = datetime.now()
         parking_time = datetime.strptime(parking_time, "%Y-%m-%d %H:%M:%S")
         parking_duration = (leaving_time - parking_time)
-        cursor.execute("""UPDATE Reservations SET Leaving_time = ? WHERE Reservation_ID = ?""", (leaving_time.strftime("%Y-%m-%d %H:%M:%S"), reservation_id))
+        total_hours = parking_duration.total_seconds() / 3600
+        cursor.execute("""SELECT pl.Price FROM Parking_spots ps JOIN Parking_Lots pl ON ps.Lot_ID = pl.Lot_ID WHERE ps.Spot_ID = ?""", (Spot_ID,))
+        price_row = cursor.fetchone()
+        price_per_hour = float(price_row[0]) if price_row else 0
+        parking_cost = round(total_hours * price_per_hour, 2)
+        cursor.execute("""UPDATE Reservations SET Leaving_time = ? , Parking_cost = ? WHERE Reservation_ID = ?""", (leaving_time.strftime("%Y-%m-%d %H:%M:%S"), parking_cost,reservation_id))
         cursor.execute("""UPDATE Parking_spots SET status = 'A' WHERE Spot_ID = ?""", (Spot_ID,))
     connection.commit()
     connection.close()
-    return redirect("/user_dashboard",parking_duration=parking_duration)
+    return redirect("/user_dashboard")
 
 @app.route("/user_history")
 def user_history():
