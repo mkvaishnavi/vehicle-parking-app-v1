@@ -15,6 +15,7 @@
             <th>Parking Time</th>
             <th>Leaving Time</th>
             <th>Cost</th>
+            <th>Parking Duration</th>
         </tr>
         {% for R in history %}
         <tr>
@@ -24,6 +25,7 @@
             <td>{{ R[3] }}</td> 
             <td>{{ R[4] if R[4] else "still parked" }}</td> 
             <td>{{ R[5] if R[5] else "N/A" }}</td>
+            <td>{{ R[6] }}</td>
         </tr>
         {% endfor %}
     </table>

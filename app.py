@@ -214,11 +214,12 @@ def release_spot(Spot_ID):
         reservation_id , parking_time = row[0], row[1]
         leaving_time = datetime.now()
         parking_time = datetime.strptime(parking_time, "%Y-%m-%d %H:%M:%S")
+        parking_duration = (leaving_time - parking_time)
         cursor.execute("""UPDATE Reservations SET Leaving_time = ? WHERE Reservation_ID = ?""", (leaving_time.strftime("%Y-%m-%d %H:%M:%S"), reservation_id))
         cursor.execute("""UPDATE Parking_spots SET status = 'A' WHERE Spot_ID = ?""", (Spot_ID,))
     connection.commit()
     connection.close()
-    return redirect("/user_dashboard")
+    return redirect("/user_dashboard",parking_duration=parking_duration)
 
 @app.route("/user_history")
 def user_history():
@@ -230,7 +231,30 @@ def user_history():
     cursor.execute("""SELECT r.Reservation_ID, r.Spot_ID, r.Vehicle_number, r.Parking_time, r.Leaving_time, r.Parking_cost FROM Reservations r JOIN Parking_spots ps ON r.Spot_ID = ps.Spot_ID JOIN Parking_Lots pl ON ps.Lot_ID = pl.Lot_ID WHERE r.User_ID = ? ORDER BY r.Reservation_ID DESC""", (user_id,))
     history = cursor.fetchall()
     connection.close()
-    return render_template("user_history.html", history=history)
+    history_with_duration = []
+    for res in history:
+        parking_time = datetime.strptime(res[3], "%Y-%m-%d %H:%M:%S")
+        leaving_time = datetime.strptime(res[4], "%Y-%m-%d %H:%M:%S") if res[4] else None
+        duration = str(leaving_time - parking_time) if leaving_time else "Still Parked"
+        history_with_duration.append(res + (duration,))
+    return render_template("user_history.html", history=history_with_duration)
+
+@app.route("/all_parking_records")
+def all_parking_records():
+    if "role" not in session or session["role"]!="admin":
+        return redirect("/Login")
+    connection=sqlite3.connect("database.db")
+    cursor=connection.cursor()
+    cursor.execute("""SELECT r.Reservation_ID , u.full_name , r.vehicle_number , r.parking_time , r.leaving_time , r.parking_cost , ps.Spot_ID , pl.Location_name FROM Reservations r JOIN User u ON r.User_ID = u.User_ID JOIN Parking_spots ps ON r.Spot_ID = ps.Spot_ID JOIN Parking_Lots pl ON ps.Lot_ID = pl.Lot_ID ORDER BY r.Reservation_ID DESC""")
+    records=cursor.fetchall()
+    connection.close()
+    records_with_duration = []
+    for r in records:
+        parking_time = datetime.strptime(r[3], "%Y-%m-%d %H:%M:%S")
+        leaving_time = datetime.strptime(r[4], "%Y-%m-%d %H:%M:%S") if r[4] else None
+        duration = str(leaving_time - parking_time) if leaving_time else "Still Parked"
+        records_with_duration.append(r + (duration,))
+    return render_template("all_parking_records.html",records=records_with_duration)
 
 if __name__=="__main__":
     app.debug=True

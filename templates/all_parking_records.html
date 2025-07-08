@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>All Parking Records</title>
+    </head>
+    <body>
+        <h1>All Parking Records</h1>
+        {% if records and records|length > 0 %}
+        <table border="2">
+            <tr>
+                <th>Reservation ID</th>
+                <th>User</th>
+                <th>Vehicle Number</th>
+                <th>Spot ID</th>
+                <th>Location</th>
+                <th>Parking Time</th>
+                <th>Leaving Time</th>
+                <th>Duration</th>
+                <th>Cost</th>
+            </tr>
+            {% for R in records %}
+            <tr>
+                <td>{{ R[0] }}</td>
+                <td>{{ R[1] }}</td>
+                <td>{{ R[2] }}</td>
+                <td>{{ R[6] }}</td>
+                <td>{{ R[7] }}</td>
+                <td>{{ R[3] }}</td>
+                <td>{{ R[4] if R[4] else "Still Parked" }}</td>
+                <td>{{ R[8] }}</td>
+                <td>{{ R[5] if R[5] else "N/A" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No Parking Records found</p>
+        {% endif %}
+        <a href="/admin_dashboard">Back to Admin Dashboard</a>
+    </body>
+</html>
