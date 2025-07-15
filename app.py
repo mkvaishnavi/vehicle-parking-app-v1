@@ -25,7 +25,7 @@ def registration():
 
         connection.commit()
         connection.close()
-    return "Registration Successful"
+    return redirect("/Login")
 
 @app.route("/Login",methods=["GET","POST"])
 def login():
