@@ -4,6 +4,10 @@ import sqlite3
 
 app=Flask(__name__)
 app.secret_key="secret_key_123"
+
+@app.route("/")
+def index():
+    return redirect("/Login")
 @app.route("/Register",methods=["GET","POST"])
 def registration():
     if request.method=="GET":
